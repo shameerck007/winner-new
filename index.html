@@ -204,6 +204,103 @@ td.center { text-align:center; }
 .col-amt { color:var(--gold2); font-weight:900; font-family:'Fredoka One',cursive; font-size:15px; }
 .pending-note { margin-top:16px; padding:12px 18px; background:#fff8f0; border-left:4px solid var(--gold); border-radius:0 8px 8px 0; color:var(--muted); font-size:13px; font-weight:700; }
 @media(max-width:640px){ header,.tabs{ padding-left:16px; padding-right:16px; } .main-card{ margin:0 12px 32px; } .setup-inner,.report-inner{ padding:24px 20px; } .arena-footer{ padding:16px 20px; } }
+
+/* ── SESSION HISTORY TAB ── */
+.history-inner { padding: 36px 40px; }
+.history-empty { color: #b0c8e0; font-style: italic; font-size: 15px; padding: 8px 0; font-weight: 600; }
+
+.session-list { display: flex; flex-direction: column; gap: 14px; }
+
+.session-card {
+  border: 2px solid #d0e4f8;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #fff;
+  transition: box-shadow .2s, border-color .2s;
+  cursor: pointer;
+}
+.session-card:hover { border-color: var(--sky2); box-shadow: 0 6px 24px rgba(26,111,181,0.12); }
+
+.session-card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 22px;
+  background: linear-gradient(135deg, #f4f8ff, #e8f2ff);
+  gap: 12px; flex-wrap: wrap;
+}
+.session-card-title {
+  font-family: 'Fredoka One', cursive;
+  font-size: 18px; color: var(--sky1);
+  display: flex; align-items: center; gap: 10px;
+}
+.session-card-meta {
+  display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+}
+.s-badge {
+  font-size: 11px; font-weight: 800; letter-spacing: 1px;
+  padding: 4px 12px; border-radius: 20px; text-transform: uppercase;
+}
+.s-badge-blue  { background: #e0f0ff; color: var(--sky1); }
+.s-badge-green { background: #e0faf0; color: var(--green); }
+.s-badge-gold  { background: #fff8e0; color: var(--gold2); }
+.s-badge-date  { background: #f0f0f8; color: #8899bb; }
+
+.session-card-body { display: none; padding: 18px 22px; border-top: 2px solid #e8f2ff; }
+.session-card-body.open { display: block; }
+
+.session-winners-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px; margin-bottom: 14px;
+}
+.sw-item {
+  background: #f4f8ff; border: 2px solid #d0e4f8;
+  border-radius: 12px; padding: 10px 14px;
+  display: flex; align-items: center; gap: 10px;
+}
+.sw-rank {
+  width: 30px; height: 30px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Fredoka One', cursive; font-size: 13px; flex-shrink: 0;
+}
+.sw-info { flex: 1; min-width: 0; }
+.sw-name { font-weight: 800; font-size: 14px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sw-month { font-size: 11px; font-weight: 700; color: var(--green); }
+.sw-amt { font-size: 12px; font-weight: 800; color: var(--gold2); }
+
+.session-card-actions {
+  display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;
+}
+.btn-sm {
+  padding: 7px 16px; font-size: 12px; border-radius: 8px;
+  border: 2px solid #d0e4f8; background: #f4f8ff;
+  color: var(--sky1); cursor: pointer;
+  font-family: 'Nunito', sans-serif; font-weight: 800;
+  transition: all .15s; white-space: nowrap;
+}
+.btn-sm:hover { background: var(--sky2); color: #fff; border-color: var(--sky2); }
+.btn-sm-red {
+  padding: 7px 16px; font-size: 12px; border-radius: 8px;
+  border: none; background: #fff0f0;
+  color: var(--red); cursor: pointer;
+  font-family: 'Nunito', sans-serif; font-weight: 800;
+  transition: all .15s;
+}
+.btn-sm-red:hover { background: var(--red); color: #fff; }
+
+.history-topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px; flex-wrap: wrap; gap: 10px;
+}
+.history-count {
+  font-size: 12px; font-weight: 800; color: var(--muted);
+  letter-spacing: 1px; text-transform: uppercase;
+}
+.partial-tag {
+  font-size: 10px; font-weight: 800; letter-spacing: 1px;
+  padding: 2px 8px; border-radius: 8px; text-transform: uppercase;
+  background: #fff8e0; color: #c07a00; border: 1px solid #f5c842;
+  margin-left: 6px;
+}
 </style>
 </head>
 <body>
@@ -225,6 +322,7 @@ td.center { text-align:center; }
   <button class="tab-btn active" onclick="switchTab(0)">⚙️ Setup</button>
   <button class="tab-btn" onclick="switchTab(1)">🎈 Shoot!</button>
   <button class="tab-btn" onclick="switchTab(2)">🏆 Report</button>
+  <button class="tab-btn" onclick="switchTab(3)" id="historyTabBtn">📁 History</button>
 </div>
 
 <div class="main-card">
@@ -348,7 +446,20 @@ td.center { text-align:center; }
     </div>
   </div>
 
-</div>
+  <!-- SESSION HISTORY -->
+  <div id="tab-3" class="tab-content">
+    <div class="history-inner">
+      <div class="sec-title"><span class="dot">📁</span> Session History</div>
+      <div class="history-topbar">
+        <div class="history-count" id="historyCount">0 sessions saved</div>
+        <button class="btn-sm-red" onclick="clearAllHistory()" id="clearAllBtn" style="display:none">🗑️ Clear All History</button>
+      </div>
+      <div id="historyEmpty" class="history-empty">No sessions saved yet. Complete a draw and it will be saved here automatically! 🎈</div>
+      <div class="session-list" id="sessionList"></div>
+    </div>
+  </div>
+
+</div><!-- /main-card -->
 
 <script>
 // ─── STATE ───────────────────────────────────────────────
@@ -530,6 +641,7 @@ function switchTab(n){
   document.querySelectorAll('.tab-content').forEach((el,i)=>el.classList.toggle('active',i===n));
   document.querySelectorAll('.tab-btn').forEach((btn,i)=>btn.classList.toggle('active',i===n));
   if(n===2) renderReport();
+  if(n===3) renderHistory();
   if(n===1 && balloons.length > 0) requestAnimationFrame(resizeCanvas);
 }
 
@@ -772,6 +884,7 @@ function popBalloon(balloon, idx){
   announceWinner(w.rank, w.name, w.month, w.total);
 
   updateDrawnPills();
+  saveCurrentSession(false); // ← auto-save partial progress
 }
 
 function stopSpeaking() {
@@ -789,6 +902,7 @@ function closePopup(){
 }
 
 function showAllDone(){
+  saveCurrentSession(true);  // ← save completed session
   playVictorySound();
   // Announce all done
   if (soundEnabled && 'speechSynthesis' in window) {
@@ -852,6 +966,9 @@ if ('speechSynthesis' in window) {
   window.speechSynthesis.getVoices();
   window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
 }
+
+// Load history badge on startup
+updateHistoryBadge();
 
 // ─── REPORT ───────────────────────────────────────────────
 function renderReport(){
@@ -954,6 +1071,239 @@ function exportPDF(){
     doc.text('Page '+p+' of '+pageCount, W-14, doc.internal.pageSize.getHeight()-4, {align:'right'});
   }
   doc.save(sn.replace(/\s+/g,'_') + '_Winners_Report.pdf');
+}
+
+// ─── SESSION STORAGE ─────────────────────────────────────
+const STORAGE_KEY = 'chittyDrawSessions';
+
+function loadSessions() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+  catch(e) { return []; }
+}
+
+function saveSessions(sessions) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
+}
+
+function saveCurrentSession(isComplete) {
+  const sn      = document.getElementById('sessionName').value.trim() || 'Unnamed Session';
+  const monthly = parseFloat(document.getElementById('monthly').value) || 0;
+  const smIdx   = parseInt(document.getElementById('startMonth').value) || 0;
+  const total   = monthly * participants.length;
+  const now     = new Date().toISOString();
+
+  const sessions = loadSessions();
+
+  // Update existing session with same name+date, or create new
+  const sessionId = sn + '_' + new Date().toDateString();
+  const existingIdx = sessions.findIndex(s => s.id === sessionId);
+
+  const sessionData = {
+    id: sessionId,
+    name: sn,
+    monthly,
+    total,
+    startMonth: smIdx,
+    participantCount: participants.length,
+    participants: participants.map(p => p.name),
+    winners: winners.map(w => ({...w})),
+    isComplete,
+    savedAt: now,
+    displayDate: new Date().toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'})
+  };
+
+  if (existingIdx >= 0) sessions[existingIdx] = sessionData;
+  else sessions.unshift(sessionData); // newest first
+
+  saveSessions(sessions);
+  updateHistoryBadge();
+}
+
+function updateHistoryBadge() {
+  const sessions = loadSessions();
+  const btn = document.getElementById('historyTabBtn');
+  if (sessions.length > 0) {
+    btn.textContent = `📁 History (${sessions.length})`;
+  } else {
+    btn.textContent = '📁 History';
+  }
+}
+
+function deleteSession(id) {
+  if (!confirm('Delete this session from history?')) return;
+  const sessions = loadSessions().filter(s => s.id !== id);
+  saveSessions(sessions);
+  updateHistoryBadge();
+  renderHistory();
+}
+
+function clearAllHistory() {
+  if (!confirm('Clear ALL saved session history?\n\nThis cannot be undone.')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  updateHistoryBadge();
+  renderHistory();
+}
+
+function toggleSessionCard(id) {
+  const body = document.getElementById('sb_' + id);
+  if (body) body.classList.toggle('open');
+}
+
+function renderHistory() {
+  const sessions = loadSessions();
+  const empty = document.getElementById('historyEmpty');
+  const list  = document.getElementById('sessionList');
+  const count = document.getElementById('historyCount');
+  const clearBtn = document.getElementById('clearAllBtn');
+
+  count.textContent = sessions.length + ' session' + (sessions.length !== 1 ? 's' : '') + ' saved';
+  clearBtn.style.display = sessions.length > 0 ? '' : 'none';
+
+  if (sessions.length === 0) {
+    empty.style.display = '';
+    list.innerHTML = '';
+    return;
+  }
+  empty.style.display = 'none';
+
+  const rc = r => r===1?'rank-1':r===2?'rank-2':r===3?'rank-3':'rank-reg';
+  const safeId = id => id.replace(/[^a-zA-Z0-9_]/g, '_');
+
+  list.innerHTML = sessions.map(s => {
+    const sid = safeId(s.id);
+    const winnerCount = s.winners.length;
+    const totalCount  = s.participantCount;
+    const isPartial   = !s.isComplete && winnerCount > 0 && winnerCount < totalCount;
+    const statusLabel = s.isComplete
+      ? `<span class="s-badge s-badge-green">✅ Complete</span>`
+      : winnerCount === 0
+        ? `<span class="s-badge s-badge-blue">⏳ Not started</span>`
+        : `<span class="s-badge s-badge-gold">🔄 Partial</span>`;
+
+    const winnersHtml = s.winners.length === 0
+      ? '<div class="history-empty" style="padding:8px 0;font-size:13px">No winners drawn yet.</div>'
+      : `<div class="session-winners-grid">
+          ${s.winners.map(w => `
+            <div class="sw-item">
+              <div class="sw-rank ${rc(w.rank)}">${w.rank}</div>
+              <div class="sw-info">
+                <div class="sw-name">${escHtml(w.name)}</div>
+                <div class="sw-month">${w.month}</div>
+              </div>
+              <div class="sw-amt">₹${w.total.toLocaleString('en-IN')}</div>
+            </div>`).join('')}
+        </div>`;
+
+    const participantsHtml = s.participants && s.participants.length > 0
+      ? `<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px">
+          ${s.participants.map(p => `<span style="background:#f0f8ff;border:1.5px solid #c8e0f8;border-radius:8px;padding:3px 10px;font-size:12px;font-weight:700;color:#4478aa">${escHtml(p)}</span>`).join('')}
+        </div>`
+      : '';
+
+    return `
+    <div class="session-card" id="sc_${sid}">
+      <div class="session-card-header" onclick="toggleSessionCard('${sid}')">
+        <div class="session-card-title">
+          🎪 ${escHtml(s.name)}
+          ${isPartial ? '<span class="partial-tag">Partial</span>' : ''}
+        </div>
+        <div class="session-card-meta">
+          <span class="s-badge s-badge-blue">👥 ${s.participantCount}</span>
+          <span class="s-badge s-badge-gold">₹${s.total.toLocaleString('en-IN')}</span>
+          ${statusLabel}
+          <span class="s-badge s-badge-date">📅 ${s.displayDate}</span>
+          <span style="font-size:18px;color:#aac;transition:transform .2s" id="arr_${sid}">▾</span>
+        </div>
+      </div>
+      <div class="session-card-body" id="sb_${sid}">
+        <div style="font-size:11px;font-weight:800;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin-bottom:8px">
+          Winners (${winnerCount}/${totalCount})
+        </div>
+        ${winnersHtml}
+        <div style="font-size:11px;font-weight:800;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin:12px 0 6px">
+          Participants
+        </div>
+        ${participantsHtml}
+        <div class="session-card-actions">
+          <button class="btn-sm" onclick="exportSessionPDF('${s.id}')">📄 Export PDF</button>
+          <button class="btn-sm-red" onclick="deleteSession('${s.id}')">🗑️ Delete</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function exportSessionPDF(sessionId) {
+  const sessions = loadSessions();
+  const s = sessions.find(x => x.id === sessionId);
+  if (!s) return;
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  const W = doc.internal.pageSize.getWidth();
+  const now = new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+
+  doc.setFillColor(26, 111, 181);
+  doc.rect(0, 0, W, 38, 'F');
+  doc.setFillColor(35, 137, 216);
+  doc.rect(0, 33, W, 5, 'F');
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(22);
+  doc.setTextColor(255,255,255);
+  doc.text('Chitty Draw — Winners Report', W/2, 16, {align:'center'});
+  doc.setFontSize(10);
+  doc.setFont('helvetica','normal');
+  doc.text(s.name + '   |   Generated: ' + now, W/2, 26, {align:'center'});
+
+  let y = 48;
+  const MONTHS_FULL = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const cards = [
+    { label:'Total Participants', value: s.participantCount.toString(), color:[230,247,255] },
+    { label:'Starting Month',     value: MONTHS_FULL[s.startMonth] || '—', color:[255,248,230] },
+    { label:'Monthly Payment',    value:'Rs.' + s.monthly.toLocaleString('en-IN'), color:[230,255,242] },
+    { label:'Total Chitty Amount',value:'Rs.' + s.total.toLocaleString('en-IN'),   color:[255,240,230] },
+  ];
+  const cardW = (W - 30) / 4;
+  cards.forEach((c, i) => {
+    const cx = 14 + i * (cardW + 2);
+    doc.setFillColor(...c.color);
+    doc.roundedRect(cx, y, cardW, 22, 2, 2, 'F');
+    doc.setFontSize(7); doc.setFont('helvetica','bold'); doc.setTextColor(100,130,160);
+    doc.text(c.label.toUpperCase(), cx + cardW/2, y+7, {align:'center'});
+    doc.setFontSize(11); doc.setFont('helvetica','bold'); doc.setTextColor(26,111,181);
+    doc.text(c.value, cx + cardW/2, y+16, {align:'center'});
+  });
+  y += 30;
+
+  doc.setFontSize(12); doc.setFont('helvetica','bold'); doc.setTextColor(26,111,181);
+  doc.text('Complete Winners List', 14, y);
+  doc.setDrawColor(26,111,181); doc.setLineWidth(0.5);
+  doc.line(14, y+2, W-14, y+2);
+  y += 8;
+
+  const tableData = s.winners.map(w => [w.rank, w.name, w.month, 'Rs.' + w.total.toLocaleString('en-IN')]);
+  doc.autoTable({
+    startY: y,
+    head: [['#', 'Participant Name', 'Month', 'Amount Received']],
+    body: tableData,
+    theme: 'grid',
+    headStyles: { fillColor: [26, 111, 181], textColor: 255, fontStyle: 'bold', fontSize: 10, halign: 'center' },
+    columnStyles: { 0: { halign:'center', cellWidth:14, fontStyle:'bold' }, 1: { cellWidth:75, fontStyle:'bold' }, 2: { cellWidth:38, halign:'center', textColor:[39,174,96] }, 3: { halign:'right', textColor:[232,146,15], fontStyle:'bold' } },
+    alternateRowStyles: { fillColor:[245,250,255] },
+    bodyStyles: { fontSize:10, textColor:[26,42,58] },
+    margin: { left:14, right:14 },
+  });
+
+  const pageCount = doc.internal.getNumberOfPages();
+  for(let p=1;p<=pageCount;p++){
+    doc.setPage(p);
+    doc.setFillColor(240,246,255);
+    doc.rect(0, doc.internal.pageSize.getHeight()-12, W, 12, 'F');
+    doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(120,150,180);
+    doc.text('Chitty Balloon Draw System   |   Confidential', 14, doc.internal.pageSize.getHeight()-4);
+    doc.text('Page '+p+' of '+pageCount, W-14, doc.internal.pageSize.getHeight()-4, {align:'right'});
+  }
+  doc.save(s.name.replace(/\s+/g,'_') + '_Winners_Report.pdf');
 }
 
 // ─── RESET ────────────────────────────────────────────────
